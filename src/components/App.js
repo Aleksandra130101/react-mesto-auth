@@ -24,26 +24,26 @@ function App() {
   const [textInfoTooltip, setTextInfoTooltip] = useState('');
   const [email, setEmail] = useState('');
 
-  const navigate = useNavigate();
-
-  function getDateUserCards() {
-    Promise.all([api.getUserInfo(), api.getInitialCards()])
-      .then(([user, cards]) => {
-        setCurrentUser(user);
-        setCards(cards);
-      })
-  }
-
-  useEffect(() => {
-    tokenCheck();
-  }, [])
-
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [isImagePopupOpen, setIsImagePopupOpen] = useState(false);
   const [isRegisterPopupOpen, setIsRegisterPopupOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState({});
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    tokenCheck();
+    if (loggedIn) {
+      Promise.all([api.getUserInfo(), api.getInitialCards()])
+      .then(([user, cards]) => {
+        setCurrentUser(user);
+        setCards(cards);
+      })
+      .catch((err) => console.log(err));
+    }
+  }, [loggedIn])
 
   function handleRegisterUserClick() {
     setIsRegisterPopupOpen(!isRegisterPopupOpen);
@@ -84,13 +84,11 @@ function App() {
 
     if (token) {
       //проверка токена
-      if (token) {
         apiAuth.getContent(token)
           .then((res) => {
             if (res) {
               setEmail(res.data.email);
               setLoggedIn(true);
-              getDateUserCards();
               navigate("/", { replace: true })
             }
           })
@@ -98,7 +96,6 @@ function App() {
             console.log(err);
           })
       }
-    }
   }
 
   //авторизация
@@ -106,7 +103,6 @@ function App() {
     return apiAuth.authorize(email, password)
       .then((data) => {
         if (data.token) {
-          getDateUserCards();
           setLoggedIn(true);
           setEmail(email);
           localStorage.setItem('token', data.token);
