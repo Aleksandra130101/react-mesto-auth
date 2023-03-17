@@ -28,15 +28,15 @@ function Register( { handleRegister } ) {
         <div className="authorize">
             <h2 className="authorize__title">Регистрация</h2>
 
-            <form onSubmit={handleSubmit} className="authorize__form authorize__form_register" noValidate>
+            <form onSubmit={handleSubmit} className="authorize__form authorize__form_register">
                 <input onChange={handleDataNewUser} id="email" value={formvalue.email} type="email" className="authorize__input authorize__input_email" name="email" placeholder="Email" required minLength="2" maxLength="40" />
                 <span className="authorize__input-error email-error"></span>
 
-                <input onChange={handleDataNewUser} id="password" value={formvalue.password} type="text" className="authorize__input authorize__input_password" name="password" placeholder="Пароль" required minLength="2" maxLength="40" />
+                <input onChange={handleDataNewUser} id="password" value={formvalue.password} type="password" className="authorize__input authorize__input_password" name="password" placeholder="Пароль" required minLength="2" maxLength="40" />
                 <span className="authorize__input-error password-error"></span>
 
                 <button type="submit" className="authorize__button">Зарегистрироваться</button>
-                <p className="authorize__signature ">Уже зарегистрированы? <Link to='/sign-in'>Войти</Link></p>
+                <p className="authorize__signature ">Уже зарегистрированы? <Link to='/sign-in' className="authorize__signature authorize__signature_link">Войти</Link></p>
             </form>
 
         </div>

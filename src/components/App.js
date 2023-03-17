@@ -13,7 +13,7 @@ import Login from './Login';
 import Register from './Register';
 import ProtectedRoute from './ProtectedRoute';
 import InfoTooltip from './InfoTooltip';
-import { apiAuth } from '../auth';
+import { apiAuth } from '../utils/auth';
 
 function App() {
 
@@ -21,17 +21,21 @@ function App() {
   const [cards, setCards] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
   const [registerIn, setRegisterIn] = useState(false);
+  const [textInfoTooltip, setTextInfoTooltip] = useState('');
   const [email, setEmail] = useState('');
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    tokenCheck();
+  function getDateUserCards() {
     Promise.all([api.getUserInfo(), api.getInitialCards()])
       .then(([user, cards]) => {
         setCurrentUser(user);
         setCards(cards);
       })
+  }
+
+  useEffect(() => {
+    tokenCheck();
   }, [])
 
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -70,15 +74,15 @@ function App() {
     setIsImagePopupOpen(false);
     setIsRegisterPopupOpen(false);
     setSelectedCard({});
-    if (!isRegisterPopupOpen) {
+    if (isRegisterPopupOpen) {
       setRegisterIn(false);
     }
   }
 
   function tokenCheck() {
-    if (localStorage.getItem('token')) {
-      const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
 
+    if (token) {
       //проверка токена
       if (token) {
         apiAuth.getContent(token)
@@ -86,10 +90,13 @@ function App() {
             if (res) {
               setEmail(res.data.email);
               setLoggedIn(true);
+              getDateUserCards();
               navigate("/", { replace: true })
             }
-          }
-          )
+          })
+          .catch((err) => {
+            console.log(err);
+          })
       }
     }
   }
@@ -99,13 +106,18 @@ function App() {
     return apiAuth.authorize(email, password)
       .then((data) => {
         if (data.token) {
+          getDateUserCards();
           setLoggedIn(true);
           setEmail(email);
           localStorage.setItem('token', data.token);
           navigate('/', { replace: true });
         }
       })
-      .catch((err) => console.log(err))
+      .catch((err) => {
+        setTextInfoTooltip('Что-то пошло не так! Попробуйте ещё раз.');
+        handleRegisterUserClick();
+        console.log(err);
+      })
   }
 
   //регистрация
@@ -113,12 +125,14 @@ function App() {
     return apiAuth.register(email, password)
       .then(() => {
         setRegisterIn(!registerIn);
+        setTextInfoTooltip('Вы успешно зарегистрировались!');
         handleRegisterUserClick();
         navigate('/sign-in', { replace: true });
       })
       .catch((err) => {
+        console.log(err);
+        setTextInfoTooltip('Что-то пошло не так! Попробуйте ещё раз.');
         handleRegisterUserClick();
-        console.log(err)
       })
 
   }
@@ -219,11 +233,11 @@ function App() {
             cards={cards}
           />} />
 
-          <Route path="*" element={<Navigate to="/" replace />}/>
-          
+          <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
 
-        {loggedIn && < Footer/>}
+        {loggedIn && < Footer />}
 
         <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
 
@@ -231,7 +245,7 @@ function App() {
 
         <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlace} />
 
-        <InfoTooltip isOpen={isRegisterPopupOpen} onClose={closeAllPopups} registerIn={registerIn} />
+        <InfoTooltip isOpen={isRegisterPopupOpen} onClose={closeAllPopups} registerIn={registerIn} text={textInfoTooltip}/>
 
         <ImagePopup
           isOpen={isImagePopupOpen}
